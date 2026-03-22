@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Unified AI Workspace</title>
+    <title>Blake Brandon - AI Workspace & Portfolio</title>
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; }
         body { background: linear-gradient(135deg, #1e293b 0%, #312e81 100%); min-height: 100vh; padding: 20px; color: #333; }
@@ -29,8 +29,8 @@
         /* Forms & Inputs */
         label { display: block; font-weight: 600; margin-bottom: 8px; font-size: 1.1em; color: #1e293b; }
         .label-desc { font-size: 0.85em; color: #64748b; font-weight: 400; margin-bottom: 8px; }
-        textarea, input[type="text"], input[type="file"] { width: 100%; padding: 15px; border: 2px solid #e1e8ed; border-radius: 8px; font-size: 15px; margin-bottom: 20px; transition: border-color 0.3s; resize: vertical; }
-        textarea:focus, input[type="text"]:focus { outline: none; border-color: #667eea; }
+        textarea, input[type="text"], input[type="file"], select { width: 100%; padding: 15px; border: 2px solid #e1e8ed; border-radius: 8px; font-size: 15px; margin-bottom: 20px; transition: border-color 0.3s; resize: vertical; }
+        textarea:focus, input[type="text"]:focus, select:focus { outline: none; border-color: #667eea; }
 
         /* Buttons */
         .btn-primary { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; padding: 12px 30px; font-size: 16px; font-weight: 600; border: none; border-radius: 8px; cursor: pointer; transition: 0.3s; width: 100%; margin-bottom: 10px; }
@@ -73,20 +73,244 @@
         .modal.active { display: flex; align-items: center; justify-content: center; }
         .modal-content { background: white; border-radius: 16px; max-width: 900px; width: 100%; max-height: 90vh; overflow-y: auto; padding: 40px; position: relative; }
         .modal-close { position: absolute; top: 20px; right: 20px; background: #f1f5f9; border: none; width: 36px; height: 36px; border-radius: 50%; cursor: pointer; font-size: 20px; }
+        
+        /* Filter Tabs */
+        .filter-tab { padding: 8px 16px; border-radius: 6px; border: 2px solid #e2e8f0; background: white; cursor: pointer; white-space: nowrap; transition: all 0.2s; font-size: 14px; font-weight: 500; }
+        .filter-tab:hover { border-color: #667eea; }
+        .filter-tab.active { background: #667eea; color: white; border-color: #667eea; }
+        
+        /* Chatbot */
+        .chatbot-toggle { position: fixed; bottom: 30px; right: 30px; width: 60px; height: 60px; border-radius: 50%; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); border: none; cursor: pointer; box-shadow: 0 4px 20px rgba(102, 126, 234, 0.4); display: flex; align-items: center; justify-content: center; font-size: 24px; color: white; z-index: 1000; transition: transform 0.2s; }
+        .chatbot-toggle:hover { transform: scale(1.1); }
+        .chatbot-window { position: fixed; bottom: 100px; right: 30px; width: 400px; height: 600px; background: white; border-radius: 16px; box-shadow: 0 20px 60px rgba(0,0,0,0.3); display: none; flex-direction: column; z-index: 1000; overflow: hidden; }
+        .chatbot-window.active { display: flex; animation: slideUp 0.3s ease; }
+        @keyframes slideUp { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
+        .chatbot-header { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; padding: 20px; display: flex; justify-content: space-between; align-items: center; }
+        .chatbot-close { background: rgba(255,255,255,0.2); border: none; color: white; width: 30px; height: 30px; border-radius: 50%; cursor: pointer; font-size: 18px; }
+        .chatbot-messages { flex: 1; overflow-y: auto; padding: 20px; background: #f8f9fa; }
+        .chatbot-message { margin-bottom: 15px; display: flex; gap: 10px; }
+        .chatbot-message.user { flex-direction: row-reverse; }
+        .chatbot-message .avatar { width: 36px; height: 36px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 18px; flex-shrink: 0; }
+        .chatbot-message.bot .avatar { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; }
+        .chatbot-message.user .avatar { background: #e2e8f0; color: #64748b; }
+        .chatbot-message .bubble { max-width: 70%; padding: 12px 16px; border-radius: 16px; line-height: 1.5; }
+        .chatbot-message.bot .bubble { background: white; color: #2d3748; border-bottom-left-radius: 4px; }
+        .chatbot-message.user .bubble { background: #667eea; color: white; border-bottom-right-radius: 4px; }
+        .chatbot-input-area { padding: 20px; background: white; border-top: 1px solid #e2e8f0; display: flex; gap: 10px; }
+        .chatbot-input { flex: 1; padding: 12px; border: 2px solid #e2e8f0; border-radius: 8px; font-size: 14px; }
+        .chatbot-send { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; border: none; padding: 12px 24px; border-radius: 8px; cursor: pointer; font-weight: 600; }
+
+        /* PORTFOLIO SPECIFIC STYLES */
+        .portfolio-header h1 { font-size: 42px; font-weight: 600; margin-bottom: 12px; color: #111827; }
+        .portfolio-subtitle { font-size: 20px; color: #6366f1; margin-bottom: 20px; font-weight: 500; }
+        .portfolio-intro { font-size: 17px; color: #4b5563; line-height: 1.8; margin-bottom: 24px; }
+        
+        .intro-flip-container { perspective: 1000px; margin-bottom: 24px; cursor: pointer; }
+        .intro-flip-inner { position: relative; width: 100%; transition: transform 0.6s; transform-style: preserve-3d; }
+        .intro-flip-container:hover .intro-flip-inner { transform: rotateY(180deg); }
+        .intro-front, .intro-back { backface-visibility: hidden; -webkit-backface-visibility: hidden; }
+        .intro-back { position: absolute; top: 0; left: 0; width: 100%; transform: rotateY(180deg); background: #f0f9ff; padding: 20px; border-radius: 8px; border: 2px dashed #6366f1; }
+        .intro-back::before { content: "👋 Translation for non-engineers:"; display: block; font-weight: 600; color: #6366f1; margin-bottom: 12px; font-size: 15px; }
+        
+        .portfolio-links { display: flex; gap: 24px; margin-top: 24px; }
+        .portfolio-links a { color: #6366f1; text-decoration: none; font-size: 15px; font-weight: 500; }
+        .portfolio-links a:hover { text-decoration: underline; }
+
+        .project-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 32px; }
+        .project-card { background: #ffffff; border: 1px solid #e5e7eb; border-radius: 12px; padding: 24px; transition: transform 0.2s, box-shadow 0.2s; height: auto; min-height: 320px; }
+        .project-card:hover { box-shadow: 0 12px 24px rgba(0,0,0,0.1); transform: translateY(-4px); }
+        .project-card h3 { font-size: 18px; font-weight: 600; margin-bottom: 10px; color: #111827; }
+        .project-card p { font-size: 14px; color: #4b5563; line-height: 1.6; margin-bottom: 16px; }
+        
+        .tech-stack { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 12px; }
+        .tech-tag { background: #eef2ff; color: #6366f1; padding: 4px 12px; border-radius: 6px; font-size: 12px; font-weight: 500; }
+        .features { list-style: none; margin-bottom: 16px; }
+        .features li { font-size: 13px; color: #6b7280; padding: 4px 0; padding-left: 18px; position: relative; }
+        .features li::before { content: "→"; position: absolute; left: 0; color: #6366f1; font-weight: bold; }
     </style>
 </head>
 <body>
 
-    <div class="nav-container">
-        <button class="nav-btn active" onclick="switchTab('code')">💻 Multi-Agent Coder</button>
-        <button class="nav-btn" onclick="switchTab('essay')">📝 Academic Essay Writer</button>
-        <button class="nav-btn" onclick="switchTab('resume')">📄 AI Resume Builder</button>
-        <button class="nav-btn" onclick="switchTab('rag')">🧠 RAG Vector Store</button>
-        <button class="nav-btn" onclick="switchTab('jobs')">🔍 AI Job Search</button>
+    <button class="chatbot-toggle" onclick="toggleChatbot()">💬</button>
+    <div id="chatbotWindow" class="chatbot-window">
+        <div class="chatbot-header">
+            <div>
+                <div style="font-weight: 600; font-size: 16px;">Blake's AI Assistant</div>
+                <div style="font-size: 12px; opacity: 0.9;">Ask about projects & experience</div>
+            </div>
+            <button class="chatbot-close" onclick="toggleChatbot()">×</button>
+        </div>
+        <div class="chatbot-messages" id="chatMessages">
+            <div class="chatbot-message bot">
+                <div class="avatar">🤖</div>
+                <div class="bubble">
+                    Hi! I'm Blake's AI assistant. Ask me about:
+                    <br>• Multi-Agent Code Generator
+                    <br>• AI Essay Writer
+                    <br>• RAG Vector Store
+                    <br>• AI Job Search Tracker
+                    <br>• Skills & experience
+                </div>
+            </div>
+        </div>
+        <div class="chatbot-input-area">
+            <input type="text" class="chatbot-input" id="chatInput" placeholder="Ask me anything..." onkeypress="if(event.key==='Enter') sendMessage()">
+            <button class="chatbot-send" onclick="sendMessage()">Send</button>
+        </div>
     </div>
 
-    <div id="tab-code" class="tab-content active container">
+    <div id="tab-portfolio" class="tab-content active container">
+
+
+        <div class="card portfolio-header">
+            <h1>Blake Brandon</h1>
+            <p class="portfolio-subtitle">AI Systems Engineer | Backend Python Developer (LLMs/RAG)</p>
+            <div class="intro-flip-container">
+                <div class="intro-flip-inner">
+                    <div class="portfolio-intro intro-front">
+                        Engineer specializing in AI systems and backend Python, building reliable, real-time, stateful
+                        applications with LLM orchestration and data pipelines. Experienced in enforcing structure on
+                        non-deterministic outputs through closed-loop pipelines (generation → validation → repair),
+                        RAG via embeddings, and resolving concurrency in collaborative systems. Focused on
+                        determinism, data integrity, and production-scale systems.
+                        <div style="margin-top: 12px; font-size: 13px; color: #9ca3af; font-style: italic;">
+                            💡 Hover (or tap) for plain English version
+                        </div>
+                    </div>
+                    <div class="portfolio-intro intro-back">
+                        I build software that makes AI tools (like ChatGPT) work reliably in real applications. Think of it like this: AI can be unpredictable, so I create systems that check the AI's work, catch mistakes, and make sure it gives consistent, useful results. I also build full websites and backend systems that store data, handle multiple users at once, and keep everything running smoothly in production.
+                    </div>
+                </div>
+            </div>
+            <div class="portfolio-links">
+                <a href="mailto:blakebrandon.dev@gmail.com">Email</a>
+                <a href="https://github.com/blakebrandon-hub" target="_blank">GitHub</a>
+                <a href="https://linkedin.com/in/blake-e-brandon" target="_blank">LinkedIn</a>
+                <a href="https://blakebrandon-hub.github.io" target="_blank">Portfolio Site</a>
+            </div>
+        </div>
+
+        <div class="card">
+            <h2 style="font-size: 28px; margin-bottom: 30px; color: #111827;">Selected Projects</h2>
+            <div class="project-grid">
+                <div class="project-card">
+                    <h3>Multi-Agent Code Generator</h3>
+                    <p>
+                        AI-powered code generation with autonomous planning, research, and execution. Uses separate planner, researcher, executor, and critic agents to build complete applications through iterative improvement loops.
+                    </p>
+                    <div class="tech-stack">
+                        <span class="tech-tag">OpenAI</span>
+                        <span class="tech-tag">Multi-Agent</span>
+                        <span class="tech-tag">Flask</span>
+                        <span class="tech-tag">Python</span>
+                    </div>
+                    <button onclick="switchTab('code')" style="margin-top: 15px; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; border: none; padding: 10px 20px; border-radius: 8px; font-weight: 600; cursor: pointer; width: 100%; transition: transform 0.2s;">
+                        Try it →
+                    </button>
+                </div>
+                
+                <div class="project-card">
+                    <h3>AI Essay Writer</h3>
+                    <p>
+                        Multi-agent essay generation system with iterative improvement loops. Uses separate planner, researcher, writer, and critic agents to produce high-quality essays through structured workflow and feedback cycles.
+                    </p>
+                    <div class="tech-stack">
+                        <span class="tech-tag">OpenAI</span>
+                        <span class="tech-tag">Multi-Agent</span>
+                        <span class="tech-tag">Flask</span>
+                        <span class="tech-tag">Python</span>
+                    </div>
+                    <button onclick="switchTab('essay')" style="margin-top: 15px; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; border: none; padding: 10px 20px; border-radius: 8px; font-weight: 600; cursor: pointer; width: 100%; transition: transform 0.2s;">
+                        Try it →
+                    </button>
+                </div>
+                
+                <div class="project-card">
+                    <h3>RAG Vector Store</h3>
+                    <p>
+                        Retrieval-augmented generation system using sentence transformers for semantic search. Stores and retrieves contextual information through embedding-based similarity matching to enhance AI agent responses.
+                    </p>
+                    <div class="tech-stack">
+                        <span class="tech-tag">Sentence Transformers</span>
+                        <span class="tech-tag">Vector Embeddings</span>
+                        <span class="tech-tag">RAG</span>
+                        <span class="tech-tag">NumPy</span>
+                    </div>
+                    <button onclick="switchTab('rag')" style="margin-top: 15px; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; border: none; padding: 10px 20px; border-radius: 8px; font-weight: 600; cursor: pointer; width: 100%; transition: transform 0.2s;">
+                        Try it →
+                    </button>
+                </div>
+                
+                <div class="project-card">
+                    <h3>AI Job Search Tracker</h3>
+                    <p>
+                        Automated job discovery and tracking system with AI-powered scoring. Scrapes job boards, stores opportunities in SQLite, and provides a full-featured interface for managing applications with status tracking and notes.
+                    </p>
+                    <div class="tech-stack">
+                        <span class="tech-tag">Web Scraping</span>
+                        <span class="tech-tag">SQLite</span>
+                        <span class="tech-tag">Flask</span>
+                        <span class="tech-tag">AI Scoring</span>
+                    </div>
+                    <button onclick="switchTab('jobs')" style="margin-top: 15px; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; border: none; padding: 10px 20px; border-radius: 8px; font-weight: 600; cursor: pointer; width: 100%; transition: transform 0.2s;">
+                        Try it →
+                    </button>
+                </div>
+            </div>
+            
+            <div style="background: #fffbeb; border: 1px solid #fcd34d; border-radius: 8px; padding: 20px; margin-top: 32px;">
+                <p style="font-size: 14px; color: #92400e; margin: 0;">
+                    <strong>📁 Full Source Code:</strong> Available on 
+                    <a href="https://github.com/blakebrandon-hub" style="color: #6366f1; text-decoration: none; font-weight: 500;">GitHub</a>
+                </p>
+            </div>
+        </div>
+
+        <div class="card">
+            <h2 style="font-size: 28px; margin-bottom: 30px; color: #111827;">Technical Skills</h2>
+            <div class="project-grid" style="grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));">
+                <div class="project-card" style="height: auto; min-height: 200px;">
+                    <h3>Languages</h3>
+                    <ul class="features">
+                        <li>Python</li>
+                        <li>JavaScript</li>
+                        <li>SQL</li>
+                    </ul>
+                </div>
+                <div class="project-card" style="height: auto; min-height: 200px;">
+                    <h3>Backend</h3>
+                    <ul class="features">
+                        <li>Flask, Django</li>
+                        <li>REST APIs, WebSockets</li>
+                        <li>SQLAlchemy</li>
+                    </ul>
+                </div>
+                <div class="project-card" style="height: auto; min-height: 200px;">
+                    <h3>AI/LLMs</h3>
+                    <ul class="features">
+                        <li>OpenAI, Claude, Gemini</li>
+                        <li>RAG, embeddings</li>
+                        <li>Structured prompting</li>
+                    </ul>
+                </div>
+                <div class="project-card" style="height: auto; min-height: 200px;">
+                    <h3>Data & Systems</h3>
+                    <ul class="features">
+                        <li>PostgreSQL, Supabase</li>
+                        <li>AWS, Docker</li>
+                        <li>Concurrency, schedulers</li>
+                        <li>Transactional systems</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div id="tab-code" class="tab-content container">
         <div class="header">
+            <button onclick="switchTab('portfolio')" style="background: rgba(255, 255, 255, 0.2); color: white; border: 2px solid white; padding: 10px 20px; border-radius: 8px; font-weight: 600; cursor: pointer; margin-bottom: 20px; transition: 0.3s;">
+                ← Back to Portfolio
+            </button>
             <h1>🤖 Multi-Agent System</h1>
             <p>AI-powered code generation with autonomous planning, research, and execution.</p>
         </div>
@@ -132,6 +356,9 @@
 
     <div id="tab-essay" class="tab-content container">
         <div class="header">
+            <button onclick="switchTab('portfolio')" style="background: rgba(255, 255, 255, 0.2); color: white; border: 2px solid white; padding: 10px 20px; border-radius: 8px; font-weight: 600; cursor: pointer; margin-bottom: 20px; transition: 0.3s;">
+                ← Back to Portfolio
+            </button>
             <h1>📚 Technical Essay Research Agent</h1>
             <p>AI-powered deep research, outlining, and academic writing for college-level essays.</p>
         </div>
@@ -194,6 +421,9 @@
 
     <div id="tab-resume" class="tab-content container">
         <div class="header">
+            <button onclick="switchTab('portfolio')" style="background: rgba(255, 255, 255, 0.2); color: white; border: 2px solid white; padding: 10px 20px; border-radius: 8px; font-weight: 600; cursor: pointer; margin-bottom: 20px; transition: 0.3s;">
+                ← Back to Portfolio
+            </button>
             <h1>📄 AI Resume Builder</h1>
             <p>Upload your code and current resume files to generate an ATS-optimized Word document.</p>
         </div>
@@ -247,6 +477,9 @@
 
     <div id="tab-rag" class="tab-content container">
         <div class="header">
+            <button onclick="switchTab('portfolio')" style="background: rgba(255, 255, 255, 0.2); color: white; border: 2px solid white; padding: 10px 20px; border-radius: 8px; font-weight: 600; cursor: pointer; margin-bottom: 20px; transition: 0.3s;">
+                ← Back to Portfolio
+            </button>
             <h1>🧠 RAG Vector Store</h1>
             <p>Semantic search powered by sentence embeddings. (Memories stored here are used by Code & Essay Agents!)</p>
         </div>
@@ -301,41 +534,141 @@
         </div>
     </div>
 
-    <!-- Job Search Tab -->
     <div id="tab-jobs" class="tab-content container">
         <div class="header">
+            <button onclick="switchTab('portfolio')" style="background: rgba(255, 255, 255, 0.2); color: white; border: 2px solid white; padding: 10px 20px; border-radius: 8px; font-weight: 600; cursor: pointer; margin-bottom: 20px; transition: 0.3s;">
+                ← Back to Portfolio
+            </button>
             <h1>🔍 AI Job Search</h1>
             <p>Smart job aggregator with AI-powered filtering and scoring</p>
         </div>
 
         <div class="card">
-            <h2 style="margin-bottom: 20px;">Search Jobs</h2>
-            <button class="btn-primary" onclick="startJobSearch()">🔍 Run Job Search</button>
+            <h2 style="margin-bottom: 20px;">⚙️ Active Filters & Scoring Rules</h2>
+            
+            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 20px; margin-bottom: 30px;">
+                <div style="background: #f0fdf4; padding: 20px; border-radius: 8px; border: 2px solid #86efac;">
+                    <div style="font-weight: 600; margin-bottom: 15px; display: flex; align-items: center; gap: 8px;">
+                        <span>✅ Good Keywords</span>
+                    </div>
+                    <div id="goodKeywordsList" style="display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 15px;"></div>
+                    <div style="display: flex; gap: 8px;">
+                        <input type="text" id="newGoodKeyword" placeholder="Add keyword..." style="flex: 1; padding: 8px; border: 2px solid #86efac; border-radius: 6px;">
+                        <button onclick="addGoodKeyword()" class="btn-primary" style="width: auto; margin: 0; padding: 8px 16px;">Add</button>
+                    </div>
+                </div>
+
+                <div style="background: #fef2f2; padding: 20px; border-radius: 8px; border: 2px solid #fca5a5;">
+                    <div style="font-weight: 600; margin-bottom: 15px; display: flex; align-items: center; gap: 8px;">
+                        <span>❌ Excluded Keywords</span>
+                    </div>
+                    <div id="badKeywordsList" style="display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 15px;"></div>
+                    <div style="display: flex; gap: 8px;">
+                        <input type="text" id="newBadKeyword" placeholder="Add keyword..." style="flex: 1; padding: 8px; border: 2px solid #fca5a5; border-radius: 6px;">
+                        <button onclick="addBadKeyword()" class="btn-primary" style="width: auto; margin: 0; padding: 8px 16px;">Add</button>
+                    </div>
+                </div>
+
+                <div style="background: #fef3c7; padding: 20px; border-radius: 8px; border: 2px solid #fcd34d;">
+                    <div style="font-weight: 600; margin-bottom: 15px; display: flex; align-items: center; gap: 8px;">
+                        <span>🚫 Excluded Seniority</span>
+                    </div>
+                    <div id="seniorKeywordsList" style="display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 15px;"></div>
+                    <div style="display: flex; gap: 8px;">
+                        <input type="text" id="newSeniorKeyword" placeholder="Add keyword..." style="flex: 1; padding: 8px; border: 2px solid #fcd34d; border-radius: 6px;">
+                        <button onclick="addSeniorKeyword()" class="btn-primary" style="width: auto; margin: 0; padding: 8px 16px;">Add</button>
+                    </div>
+                </div>
+
+                <div style="background: #eff6ff; padding: 20px; border-radius: 8px; border: 2px solid #93c5fd;">
+                    <div style="font-weight: 600; margin-bottom: 15px; display: flex; align-items: center; gap: 8px;">
+                        <span>⭐ High Signal Companies</span>
+                    </div>
+                    <div id="companiesList" style="display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 15px;"></div>
+                    <div style="display: flex; gap: 8px;">
+                        <input type="text" id="newCompany" placeholder="Add company..." style="flex: 1; padding: 8px; border: 2px solid #93c5fd; border-radius: 6px;">
+                        <button onclick="addCompany()" class="btn-primary" style="width: auto; margin: 0; padding: 8px 16px;">Add</button>
+                    </div>
+                </div>
+            </div>
+
+        <div class="card">
+            <h2 style="margin-bottom: 20px;">🔍 Job Search Actions</h2>
+            <div style="display: flex; gap: 10px; flex-wrap: wrap; margin-bottom: 20px;">
+                <button class="btn-primary" style="width: auto; flex: 0 0 auto;" onclick="startJobSearch()">🔍 Run Job Search</button>
+                <button class="btn-secondary" style="width: auto; flex: 0 0 auto;" onclick="markAllSeen()">👁️ Mark All Seen</button>
+                <button class="btn-secondary" style="width: auto; flex: 0 0 auto;" onclick="exportJobs()">📥 Export CSV</button>
+                <button class="btn-secondary" style="width: auto; flex: 0 0 auto;" onclick="showAddJobForm()">➕ Add Job Manually</button>
+            </div>
+            
+            <div style="display: flex; gap: 10px; flex-wrap: wrap;">
+                <input type="text" id="jobSearchQuery" placeholder="Search jobs..." style="flex: 1; min-width: 200px; padding: 10px; border: 2px solid #e1e8ed; border-radius: 6px;" onkeyup="if(event.key==='Enter') loadJobs()">
+                <select id="jobSortBy" onchange="loadJobs()" style="padding: 10px; border: 2px solid #e1e8ed; border-radius: 6px;">
+                    <option value="date">Latest First</option>
+                    <option value="score">Highest Score</option>
+                    <option value="company">Company A-Z</option>
+                    <option value="title">Title A-Z</option>
+                </select>
+                <button class="btn-primary" style="width: auto;" onclick="loadJobs()">🔍 Search</button>
+            </div>
+            
             <div id="jobSearchProgress" style="display:none; margin-top: 20px;">
                 <div class="progress-bar">
-                    <div class="progress-fill" id="jobProgressBar"></div>
+                    <div class="progress-fill" id="jobProgressBar" style="width: 100%;"></div>
                 </div>
                 <div style="text-align: center; color: #667eea; font-weight: 600; margin-top: 10px;" id="jobProgressText">Searching...</div>
             </div>
         </div>
 
+        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 20px; margin-bottom: 20px;">
+            <div class="stat-box"><div style="font-size: 0.875rem; color: #64748b; text-transform: uppercase; margin-bottom: 8px;">Total Jobs</div><div class="number" id="statTotal">0</div></div>
+            <div class="stat-box"><div style="font-size: 0.875rem; color: #64748b; text-transform: uppercase; margin-bottom: 8px;">New</div><div class="number" style="color: #f59e0b;" id="statNew">0</div></div>
+            <div class="stat-box"><div style="font-size: 0.875rem; color: #64748b; text-transform: uppercase; margin-bottom: 8px;">Interested</div><div class="number" style="color: #10b981;" id="statInterested">0</div></div>
+            <div class="stat-box"><div style="font-size: 0.875rem; color: #64748b; text-transform: uppercase; margin-bottom: 8px;">Applied</div><div class="number" style="color: #3b82f6;" id="statApplied">0</div></div>
+            <div class="stat-box"><div style="font-size: 0.875rem; color: #64748b; text-transform: uppercase; margin-bottom: 8px;">High Score (5+)</div><div class="number" style="color: #8b5cf6;" id="statHighScore">0</div></div>
+            <div class="stat-box"><div style="font-size: 0.875rem; color: #64748b; text-transform: uppercase; margin-bottom: 8px;">This Week</div><div class="number" style="color: #667eea;" id="statRecent">0</div></div>
+        </div>
+
+        <div style="display: flex; gap: 10px; margin-bottom: 20px; overflow-x: auto; padding: 10px 0;">
+            <button class="filter-tab active" data-status="all" onclick="filterByStatus('all')">All (<span id="filterAll">0</span>)</button>
+            <button class="filter-tab" data-status="new" onclick="filterByStatus('new')">New (<span id="filterNew">0</span>)</button>
+            <button class="filter-tab" data-status="interested" onclick="filterByStatus('interested')">Interested (<span id="filterInterested">0</span>)</button>
+            <button class="filter-tab" data-status="applied" onclick="filterByStatus('applied')">Applied (<span id="filterApplied">0</span>)</button>
+            <button class="filter-tab" data-status="interview" onclick="filterByStatus('interview')">Interview (<span id="filterInterview">0</span>)</button>
+            <button class="filter-tab" data-status="offer" onclick="filterByStatus('offer')">Offer (<span id="filterOffer">0</span>)</button>
+            <button class="filter-tab" data-status="rejected" onclick="filterByStatus('rejected')">Rejected (<span id="filterRejected">0</span>)</button>
+            <button class="filter-tab" data-status="ignored" onclick="filterByStatus('ignored')">Ignored (<span id="filterIgnored">0</span>)</button>
+        </div>
+
         <div class="card">
-            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
-                <h2>Job Listings</h2>
-                <div>
-                    <select id="jobStatusFilter" onchange="loadJobs()" style="padding: 8px; border-radius: 6px; border: 2px solid #e1e8ed;">
-                        <option value="all">All Jobs</option>
-                        <option value="new">New</option>
-                        <option value="interested">Interested</option>
-                        <option value="applied">Applied</option>
-                        <option value="interview">Interview</option>
-                        <option value="rejected">Rejected</option>
-                    </select>
-                </div>
-            </div>
+            <h2 style="margin-bottom: 20px;">Job Listings</h2>
             <div id="jobsList"></div>
         </div>
     </div>
+
+    <div id="addJobModal" class="modal">
+        <div class="modal-content" style="max-width: 600px;">
+            <button class="modal-close" onclick="closeAddJobForm()">×</button>
+            <h2 style="margin-bottom: 20px;">Add Job Manually</h2>
+            <label>Job Title *</label><input type="text" id="addJobTitle" placeholder="e.g., Senior AI Engineer">
+            <label>Company *</label><input type="text" id="addJobCompany" placeholder="e.g., OpenAI">
+            <label>Location</label><input type="text" id="addJobLocation" placeholder="e.g., Remote">
+            <label>Job URL *</label><input type="text" id="addJobUrl" placeholder="https://...">
+            <button class="btn-primary" onclick="addJobManually()">Add Job</button>
+            <button class="btn-secondary" onclick="closeAddJobForm()">Cancel</button>
+        </div>
+    </div>
+
+    <div id="notesModal" class="modal">
+        <div class="modal-content" style="max-width: 600px;">
+            <button class="modal-close" onclick="closeNotesModal()">×</button>
+            <h2 style="margin-bottom: 20px;">Job Notes</h2>
+            <textarea id="jobNotesText" rows="8" placeholder="Add notes about this job..."></textarea>
+            <button class="btn-primary" onclick="saveNotes()">Save Notes</button>
+            <button class="btn-secondary" onclick="closeNotesModal()">Cancel</button>
+        </div>
+    </div>
+
 
 
     <script>
@@ -343,11 +676,15 @@
         function switchTab(tabId) {
             document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
             document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
-            event.target.classList.add('active');
+            if (event && event.target) event.target.classList.add('active');
             document.getElementById('tab-' + tabId).classList.add('active');
             
-            // Load jobs when switching to jobs tab
+            // Scroll to top smoothly when switching tabs
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+            
             if (tabId === 'jobs') {
+                loadSavedFilters();
+                initializeFilters();
                 loadJobs();
             }
         }
@@ -358,11 +695,37 @@
             return div.innerHTML;
         }
 
+        // --- Portfolio Tap-to-Flip Logic ---
+        function setupMobileFlip() {
+            const projectCards = document.querySelectorAll('.project-card');
+            projectCards.forEach(card => {
+                // Ensure event listener is added only once
+                card.removeEventListener('click', flipCard);
+                card.addEventListener('click', flipCard);
+            });
+        }
+        
+        function flipCard() {
+            if (window.innerWidth <= 768) {
+                this.classList.toggle('flipped');
+            }
+        }
+
+        window.addEventListener('load', setupMobileFlip);
+        window.addEventListener('resize', function() {
+            if (window.innerWidth <= 768) {
+                setupMobileFlip();
+            } else {
+                const projectCards = document.querySelectorAll('.project-card');
+                projectCards.forEach(card => card.classList.remove('flipped'));
+            }
+        });
+
+
         // ==========================================
         // CODE AGENT LOGIC
         // ==========================================
         let codeJobId = null, codeInterval = null;
-        
         async function startCodeGeneration() {
             const goal = document.getElementById('codeGoal').value.trim();
             if(!goal) return alert("Please enter a goal");
@@ -471,7 +834,6 @@
                 logsBox.innerHTML = data.logs.map(l => `<div>> ${escapeHtml(l)}</div>`).join('');
                 logsBox.scrollTop = logsBox.scrollHeight;
                 
-                // Progress map
                 let prog = 10;
                 if(data.current_phase.includes("Research")) prog = 35;
                 if(data.current_phase.includes("Outline")) prog = 50;
@@ -516,7 +878,7 @@
         }
 
         // ==========================================
-        // RESUME BUILDER LOGIC (NEW)
+        // RESUME BUILDER LOGIC
         // ==========================================
         let resumeJobId = null, resumeInterval = null;
 
@@ -525,7 +887,6 @@
             const desc = document.getElementById('resumeDesc').value.trim();
             const fileInput = document.getElementById('resumeFiles');
             
-            // Replaced the strict role check with a general "give me something" check
             if(!role && !desc && fileInput.files.length === 0) {
                 return alert("Please upload files or provide a target role to generate a resume.");
             }
@@ -536,7 +897,6 @@
             document.getElementById('resumeScoresContainer').style.display = 'none';
             document.getElementById('resumeCompleteSection').style.display = 'none';
 
-            // Create FormData to send files + text
             const formData = new FormData();
             formData.append('target_role', role);
             formData.append('job_description', desc);
@@ -545,10 +905,7 @@
             }
 
             try {
-                const res = await fetch('/api/resume/generate', {
-                    method: 'POST',
-                    body: formData // No content-type header, fetch handles it for FormData
-                });
+                const res = await fetch('/api/resume/generate', { method: 'POST', body: formData });
                 resumeJobId = (await res.json()).job_id;
                 resumeInterval = setInterval(pollResumeStatus, 1000);
             } catch(e) {
@@ -570,7 +927,6 @@
                 logsBox.innerHTML = data.logs.map(l => `<div>> ${escapeHtml(l)}</div>`).join('');
                 logsBox.scrollTop = logsBox.scrollHeight;
                 
-                // Progress Math
                 let prog = 10;
                 if(data.current_phase.includes("Extracting")) prog = 30;
                 if(data.current_phase.includes("Drafting")) prog = 40 + (data.current_iteration * 15);
@@ -606,7 +962,6 @@
             } catch (e) { alert("Could not load resume text."); }
         }
 
-
         // ==========================================
         // RAG VECTOR STORE LOGIC
         // ==========================================
@@ -641,8 +996,7 @@
 
             try {
                 const res = await fetch('/api/rag/store', {
-                    method: 'POST', headers: {'Content-Type': 'application/json'},
-                    body: JSON.stringify({text, metadata})
+                    method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify({text, metadata})
                 });
                 const data = await res.json();
                 if(data.status==='success') {
@@ -650,9 +1004,7 @@
                     document.getElementById('ragText').value = '';
                     document.getElementById('ragMeta').value = '';
                     loadRagMemories();
-                } else {
-                    showRagToast('ragStoreToast', data.message, true);
-                }
+                } else { showRagToast('ragStoreToast', data.message, true); }
             } catch(e) { showRagToast('ragStoreToast', e.message, true); }
         }
 
@@ -720,91 +1072,10 @@
             }
         }
 
-        // --- Job Search Functions ---
-        let currentJobSearchId = null;
-        let jobPollInterval = null;
-
-        function startJobSearch() {
-            fetch('/api/jobs/search', { method: 'POST' })
-                .then(r => r.json())
-                .then(data => {
-                    currentJobSearchId = data.job_id;
-                    document.getElementById('jobSearchProgress').style.display = 'block';
-                    jobPollInterval = setInterval(checkJobSearchStatus, 1000);
-                });
-        }
-
-        function checkJobSearchStatus() {
-            if (!currentJobSearchId) return;
-            
-            fetch(`/api/jobs/status/${currentJobSearchId}`)
-                .then(r => r.json())
-                .then(data => {
-                    const progressText = document.getElementById('jobProgressText');
-                    const progressBar = document.getElementById('jobProgressBar');
-                    
-                    progressText.textContent = data.progress || 'Searching...';
-                    progressBar.style.width = '100%';
-                    
-                    if (data.status === 'completed' || data.status === 'error') {
-                        clearInterval(jobPollInterval);
-                        setTimeout(() => {
-                            document.getElementById('jobSearchProgress').style.display = 'none';
-                            loadJobs();
-                        }, 2000);
-                    }
-                });
-        }
-
-        function loadJobs() {
-            const statusFilter = document.getElementById('jobStatusFilter').value;
-            
-            fetch(`/api/jobs/list?status=${statusFilter}`)
-                .then(r => r.json())
-                .then(data => {
-                    const jobsList = document.getElementById('jobsList');
-                    
-                    if (!data.jobs || data.jobs.length === 0) {
-                        jobsList.innerHTML = '<div class="list-item" style="text-align: center; color: #64748b;">No jobs found. Click "Run Job Search" to find opportunities!</div>';
-                        return;
-                    }
-                    
-                    jobsList.innerHTML = data.jobs.map(job => `
-                        <div class="list-item" style="border-left-color: ${job.score >= 5 ? '#10b981' : '#667eea'};">
-                            <div style="display: flex; justify-content: space-between; align-items: start;">
-                                <div style="flex: 1;">
-                                    <div style="font-weight: 600; font-size: 16px; margin-bottom: 5px;">${escapeHtml(job.title)}</div>
-                                    <div style="color: #64748b; font-size: 14px; margin-bottom: 8px;">
-                                        ${escapeHtml(job.company)} • ${escapeHtml(job.location)} • Score: ${job.score}
-                                    </div>
-                                    <div style="display: flex; gap: 8px; margin-top: 10px; flex-wrap: wrap;">
-                                        <a href="${job.url}" target="_blank" class="btn-secondary" style="padding: 6px 12px; font-size: 13px; width: auto; margin: 0;">View Job</a>
-                                        <button onclick="updateJobStatus(${job.id}, 'interested')" class="btn-secondary" style="padding: 6px 12px; font-size: 13px; width: auto; margin: 0;">⭐ Interested</button>
-                                        <button onclick="updateJobStatus(${job.id}, 'applied')" class="btn-secondary" style="padding: 6px 12px; font-size: 13px; width: auto; margin: 0;">✅ Applied</button>
-                                        <button onclick="updateJobStatus(${job.id}, 'rejected')" class="btn-secondary" style="padding: 6px 12px; font-size: 13px; width: auto; margin: 0;">❌ Reject</button>
-                                    </div>
-                                </div>
-                                <div style="background: ${job.status === 'new' ? '#fef3c7' : job.status === 'interested' ? '#d1fae5' : job.status === 'applied' ? '#dbeafe' : '#fee2e2'}; padding: 4px 12px; border-radius: 12px; font-size: 11px; font-weight: 600; text-transform: uppercase;">
-                                    ${job.status}
-                                </div>
-                            </div>
-                        </div>
-                    `).join('');
-                });
-        }
-
-        function updateJobStatus(jobId, status) {
-            fetch(`/api/jobs/update/${jobId}/${status}`, { method: 'POST' })
-                .then(r => r.json())
-                .then(() => loadJobs());
-        }
-
         async function pruneRagSize() {
             const size = prompt("Keep latest X memories. Enter X:", "100");
             if(!size) return;
-            const res = await fetch('/api/rag/prune/size', {
-                method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify({max_memories: parseInt(size)})
-            });
+            const res = await fetch('/api/rag/prune/size', { method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify({max_memories: parseInt(size)}) });
             const data = await res.json();
             showRagToast('ragListToast', data.message);
             loadRagMemories();
@@ -813,9 +1084,7 @@
         async function pruneRagDuplicates() {
             const threshold = prompt("Enter similarity threshold (0.0 to 1.0):", "0.95");
             if(!threshold) return;
-            const res = await fetch('/api/rag/prune/duplicates', {
-                method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify({threshold: parseFloat(threshold)})
-            });
+            const res = await fetch('/api/rag/prune/duplicates', { method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify({threshold: parseFloat(threshold)}) });
             const data = await res.json();
             showRagToast('ragListToast', data.message);
             loadRagMemories();
@@ -824,12 +1093,221 @@
         async function pruneRagAge() {
             const hours = prompt("Remove memories older than X hours:", "24");
             if(!hours) return;
-            const res = await fetch('/api/rag/prune/age', {
-                method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify({max_age_ms: parseInt(hours) * 3600000})
-            });
+            const res = await fetch('/api/rag/prune/age', { method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify({max_age_ms: parseInt(hours) * 3600000}) });
             const data = await res.json();
             showRagToast('ragListToast', data.message);
             loadRagMemories();
+        }
+
+
+        // ==========================================
+        // JOB SEARCH LOGIC
+        // ==========================================
+        let currentJobSearchId = null;
+        let jobPollInterval = null;
+        let currentJobStatus = 'all';
+        let currentNotesJobId = null;
+
+        let goodKeywords = ["llm", "machine learning", "ai engineer", "rag", "nlp", "deep learning", "python", "ai platform", "ai infrastructure", "genai", "ml engineer", "mlops"];
+        let badKeywords = ["trainer", "training sales", "customer success", "advisor", "support rep", "marketing coordinator", "writer", "translation", "data entry", "annotator"];
+        let seniorKeywords = ["principal", "staff engineer", "director", "vp", "chief", "head of"];
+        let highSignalCompanies = ["openai", "anthropic", "google deepmind", "modal", "replicate", "cohere", "hugging face", "scale ai", "cursor", "perplexity"];
+
+        function initializeFilters() { renderKeywordPills(); }
+
+        function renderKeywordPills() {
+            document.getElementById('goodKeywordsList').innerHTML = goodKeywords.map(k => `<span style="background: #86efac; color: #166534; padding: 6px 12px; border-radius: 20px; font-size: 13px; display: flex; align-items: center; gap: 6px;">${k} <button onclick="removeGoodKeyword('${k}')" style="background: none; border: none; color: #166534; cursor: pointer; font-size: 16px; padding: 0; line-height: 1;">×</button></span>`).join('');
+            document.getElementById('badKeywordsList').innerHTML = badKeywords.map(k => `<span style="background: #fca5a5; color: #991b1b; padding: 6px 12px; border-radius: 20px; font-size: 13px; display: flex; align-items: center; gap: 6px;">${k} <button onclick="removeBadKeyword('${k}')" style="background: none; border: none; color: #991b1b; cursor: pointer; font-size: 16px; padding: 0; line-height: 1;">×</button></span>`).join('');
+            document.getElementById('seniorKeywordsList').innerHTML = seniorKeywords.map(k => `<span style="background: #fcd34d; color: #92400e; padding: 6px 12px; border-radius: 20px; font-size: 13px; display: flex; align-items: center; gap: 6px;">${k} <button onclick="removeSeniorKeyword('${k}')" style="background: none; border: none; color: #92400e; cursor: pointer; font-size: 16px; padding: 0; line-height: 1;">×</button></span>`).join('');
+            document.getElementById('companiesList').innerHTML = highSignalCompanies.map(k => `<span style="background: #93c5fd; color: #1e40af; padding: 6px 12px; border-radius: 20px; font-size: 13px; display: flex; align-items: center; gap: 6px;">${k} <button onclick="removeCompany('${k}')" style="background: none; border: none; color: #1e40af; cursor: pointer; font-size: 16px; padding: 0; line-height: 1;">×</button></span>`).join('');
+        }
+
+        function addGoodKeyword() { const val = document.getElementById('newGoodKeyword').value.trim().toLowerCase(); if (val && !goodKeywords.includes(val)) { goodKeywords.push(val); renderKeywordPills(); document.getElementById('newGoodKeyword').value = ''; } }
+        function removeGoodKeyword(val) { goodKeywords = goodKeywords.filter(k => k !== val); renderKeywordPills(); }
+        function addBadKeyword() { const val = document.getElementById('newBadKeyword').value.trim().toLowerCase(); if (val && !badKeywords.includes(val)) { badKeywords.push(val); renderKeywordPills(); document.getElementById('newBadKeyword').value = ''; } }
+        function removeBadKeyword(val) { badKeywords = badKeywords.filter(k => k !== val); renderKeywordPills(); }
+        function addSeniorKeyword() { const val = document.getElementById('newSeniorKeyword').value.trim().toLowerCase(); if (val && !seniorKeywords.includes(val)) { seniorKeywords.push(val); renderKeywordPills(); document.getElementById('newSeniorKeyword').value = ''; } }
+        function removeSeniorKeyword(val) { seniorKeywords = seniorKeywords.filter(k => k !== val); renderKeywordPills(); }
+        function addCompany() { const val = document.getElementById('newCompany').value.trim().toLowerCase(); if (val && !highSignalCompanies.includes(val)) { highSignalCompanies.push(val); renderKeywordPills(); document.getElementById('newCompany').value = ''; } }
+        function removeCompany(val) { highSignalCompanies = highSignalCompanies.filter(k => k !== val); renderKeywordPills(); }
+
+        function saveFilters() {
+            localStorage.setItem('goodKeywords', JSON.stringify(goodKeywords));
+            localStorage.setItem('badKeywords', JSON.stringify(badKeywords));
+            localStorage.setItem('seniorKeywords', JSON.stringify(seniorKeywords));
+            localStorage.setItem('highSignalCompanies', JSON.stringify(highSignalCompanies));
+            alert('Filters saved!');
+        }
+
+        function loadSavedFilters() {
+            const s = { good: localStorage.getItem('goodKeywords'), bad: localStorage.getItem('badKeywords'), senior: localStorage.getItem('seniorKeywords'), companies: localStorage.getItem('highSignalCompanies') };
+            if (s.good) goodKeywords = JSON.parse(s.good); if (s.bad) badKeywords = JSON.parse(s.bad); if (s.senior) seniorKeywords = JSON.parse(s.senior); if (s.companies) highSignalCompanies = JSON.parse(s.companies);
+        }
+
+        function startJobSearch() {
+                    // Package the dynamic filters from the UI
+                    const payload = {
+                        goodKeywords: goodKeywords,
+                        badKeywords: badKeywords,
+                        seniorKeywords: seniorKeywords,
+                        highSignalCompanies: highSignalCompanies
+                    };
+
+                    fetch('/api/jobs/search', { 
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify(payload)
+                    }).then(r => r.json()).then(data => {
+                        document.getElementById('jobSearchProgress').style.display = 'block';
+                        jobPollInterval = setInterval(checkJobSearchProgress, 1000);
+                    });
+                }
+
+        function checkJobSearchProgress() {
+            fetch('/api/jobs/progress').then(r => r.json()).then(data => {
+                document.getElementById('jobProgressText').textContent = data.message || 'Searching...';
+                if (data.status === 'completed' || data.status === 'error' || data.status === 'complete') {
+                    clearInterval(jobPollInterval);
+                    setTimeout(() => { document.getElementById('jobSearchProgress').style.display = 'none'; loadJobs(); }, 2000);
+                }
+            });
+        }
+
+        function filterByStatus(status) {
+            currentJobStatus = status;
+            document.querySelectorAll('.filter-tab').forEach(tab => {
+                tab.classList.remove('active');
+                if (tab.getAttribute('data-status') === status) tab.classList.add('active');
+            });
+            loadJobs();
+        }
+
+        function loadJobs() {
+            const query = document.getElementById('jobSearchQuery').value || '';
+            const sort = document.getElementById('jobSortBy').value || 'date';
+            
+            fetch(`/api/jobs/list?status=${currentJobStatus}&q=${encodeURIComponent(query)}&sort=${sort}`).then(r => r.json()).then(data => {
+                if (data.stats) {
+                    const st = data.stats.by_status || {};
+                    document.getElementById('statTotal').textContent = data.stats.total || 0;
+                    document.getElementById('statNew').textContent = st.new || 0;
+                    document.getElementById('statInterested').textContent = st.interested || 0;
+                    document.getElementById('statApplied').textContent = st.applied || 0;
+                    document.getElementById('statHighScore').textContent = data.stats.high_score || 0;
+                    document.getElementById('statRecent').textContent = data.stats.recent || 0;
+                    
+                    document.getElementById('filterAll').textContent = data.stats.total || 0;
+                    document.getElementById('filterNew').textContent = st.new || 0;
+                    document.getElementById('filterInterested').textContent = st.interested || 0;
+                    document.getElementById('filterApplied').textContent = st.applied || 0;
+                    document.getElementById('filterInterview').textContent = st.interview || 0;
+                    document.getElementById('filterOffer').textContent = st.offer || 0;
+                    document.getElementById('filterRejected').textContent = st.rejected || 0;
+                    document.getElementById('filterIgnored').textContent = st.ignored || 0;
+                }
+                
+                const list = document.getElementById('jobsList');
+                if (!data.jobs || data.jobs.length === 0) {
+                    list.innerHTML = '<div class="list-item" style="text-align: center; color: #64748b;">No jobs found. Click "Run Job Search" to find opportunities!</div>';
+                    return;
+                }
+                
+                list.innerHTML = data.jobs.map(job => `
+                    <div class="list-item" style="border-left: 4px solid ${job.score >= 5 ? '#10b981' : job.score >= 3 ? '#f59e0b' : '#667eea'}; margin-bottom: 15px;">
+                        <div style="display: flex; justify-content: space-between; align-items: start; margin-bottom: 10px;">
+                            <div style="flex: 1;">
+                                <div style="font-weight: 600; font-size: 16px; margin-bottom: 5px;">${escapeHtml(job.title)}</div>
+                                <div style="color: #64748b; font-size: 14px; margin-bottom: 8px;">🏢 ${escapeHtml(job.company)} • 📍 ${escapeHtml(job.location || 'Unknown')} • 🔗 ${escapeHtml(job.source || 'Unknown')}</div>
+                                <div style="display: flex; gap: 5px; align-items: center; margin-bottom: 10px;">
+                                    <span style="background: ${job.score >= 5 ? '#10b981' : job.score >= 3 ? '#f59e0b' : '#64748b'}; color: white; padding: 4px 10px; border-radius: 12px; font-size: 12px; font-weight: 600;">Score: ${job.score}</span>
+                                    <span style="background: ${getStatusColor(job.status)}; padding: 4px 10px; border-radius: 12px; font-size: 11px; font-weight: 600; text-transform: uppercase;">${job.status}</span>
+                                </div>
+                                ${job.notes ? `<div style="background: #f8f9fa; padding: 10px; border-radius: 6px; font-size: 13px; margin-top: 10px; font-style: italic;">📝 ${escapeHtml(job.notes)}</div>` : ''}
+                            </div>
+                        </div>
+                        <div style="display: flex; gap: 8px; flex-wrap: wrap;">
+                            <a href="${job.url}" target="_blank" rel="noopener" class="btn-secondary" style="padding: 6px 12px; font-size: 13px; width: auto; margin: 0; text-decoration: none;">🔗 View Job</a>
+                            <button onclick="updateJobStatus(${job.id}, 'interested')" class="btn-secondary" style="padding: 6px 12px; font-size: 13px; width: auto; margin: 0;">⭐ Interested</button>
+                            <button onclick="updateJobStatus(${job.id}, 'applied')" class="btn-secondary" style="padding: 6px 12px; font-size: 13px; width: auto; margin: 0;">✅ Applied</button>
+                            <button onclick="updateJobStatus(${job.id}, 'interview')" class="btn-secondary" style="padding: 6px 12px; font-size: 13px; width: auto; margin: 0;">🎯 Interview</button>
+                            <button onclick="updateJobStatus(${job.id}, 'offer')" class="btn-secondary" style="padding: 6px 12px; font-size: 13px; width: auto; margin: 0;">🎉 Offer</button>
+                            <button onclick="updateJobStatus(${job.id}, 'rejected')" class="btn-secondary" style="padding: 6px 12px; font-size: 13px; width: auto; margin: 0;">❌ Rejected</button>
+                            <button onclick="updateJobStatus(${job.id}, 'ignored')" class="btn-secondary" style="padding: 6px 12px; font-size: 13px; width: auto; margin: 0;">🚫 Ignore</button>
+                            <button onclick="showNotesModal(${job.id}, '${escapeHtml(job.notes || '').replace(/'/g, "\\'")}')}" class="btn-secondary" style="padding: 6px 12px; font-size: 13px; width: auto; margin: 0;">📝 Notes</button>
+                            <button onclick="deleteJob(${job.id})" class="btn-danger" style="padding: 6px 12px; font-size: 13px; margin: 0;">🗑️ Delete</button>
+                        </div>
+                    </div>
+                `).join('');
+            }).catch(e => console.error('Error loading jobs:', e));
+        }
+
+        function getStatusColor(status) {
+            const colors = { 'new': '#fef3c7', 'interested': '#d1fae5', 'applied': '#dbeafe', 'interview': '#e0e7ff', 'offer': '#d1fae5', 'rejected': '#fee2e2', 'ignored': '#f3f4f6', 'seen': '#e5e7eb' };
+            return colors[status] || '#e5e7eb';
+        }
+
+        function updateJobStatus(jobId, status) { fetch(`/api/jobs/update/${jobId}/${status}`, { method: 'POST' }).then(() => loadJobs()); }
+        
+        function showNotesModal(jobId, notes) { currentNotesJobId = jobId; document.getElementById('jobNotesText').value = notes; document.getElementById('notesModal').classList.add('active'); }
+        function closeNotesModal() { document.getElementById('notesModal').classList.remove('active'); currentNotesJobId = null; }
+        function saveNotes() {
+            if (!currentNotesJobId) return;
+            const notes = document.getElementById('jobNotesText').value;
+            fetch(`/api/jobs/notes/${currentNotesJobId}`, { method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify({notes}) }).then(() => { closeNotesModal(); loadJobs(); });
+        }
+
+        function deleteJob(jobId) { if (confirm('Are you sure you want to delete this job?')) fetch(`/api/jobs/delete/${jobId}`, { method: 'DELETE' }).then(() => loadJobs()); }
+        function markAllSeen() { if (confirm('Mark all new jobs as seen?')) fetch('/api/jobs/bulk/seen', { method: 'POST' }).then(() => loadJobs()); }
+
+        function showAddJobForm() { document.getElementById('addJobModal').classList.add('active'); }
+        function closeAddJobForm() { document.getElementById('addJobModal').classList.remove('active'); document.getElementById('addJobTitle').value = ''; document.getElementById('addJobCompany').value = ''; document.getElementById('addJobLocation').value = ''; document.getElementById('addJobUrl').value = ''; }
+        function addJobManually() {
+            const title = document.getElementById('addJobTitle').value.trim(); const company = document.getElementById('addJobCompany').value.trim(); const location = document.getElementById('addJobLocation').value.trim(); const url = document.getElementById('addJobUrl').value.trim();
+            if (!title || !company || !url) return alert('Title, company, and URL are required');
+            fetch('/api/jobs/add', { method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify({ title, company, location, url }) }).then(r => r.json()).then(data => {
+                if (data.success) { closeAddJobForm(); loadJobs(); } else alert(data.error || 'Failed to add job');
+            });
+        }
+        function exportJobs() { window.location.href = '/api/jobs/export'; }
+
+        // ==========================================
+        // CHATBOT LOGIC
+        // ==========================================
+        function toggleChatbot() { document.getElementById('chatbotWindow').classList.toggle('active'); }
+
+        async function sendMessage() {
+            const input = document.getElementById('chatInput');
+            const message = input.value.trim();
+            if (!message) return;
+
+            addMessage(message, 'user');
+            input.value = '';
+
+            const typingId = addMessage('Typing...', 'bot');
+
+            try {
+                const response = await fetch('/chat', { method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify({message}) });
+                const data = await response.json();
+                document.getElementById(typingId).remove();
+                addMessage(data.reply, 'bot');
+            } catch (error) {
+                document.getElementById(typingId).remove();
+                addMessage('Sorry, something went wrong. Please try again.', 'bot');
+            }
+        }
+
+        function addMessage(text, sender) {
+            const messagesDiv = document.getElementById('chatMessages');
+            const messageId = 'msg-' + Date.now();
+            const messageHTML = `
+                <div class="chatbot-message ${sender}" id="${messageId}">
+                    <div class="avatar">${sender === 'bot' ? '🤖' : '👤'}</div>
+                    <div class="bubble">${escapeHtml(text)}</div>
+                </div>
+            `;
+            messagesDiv.insertAdjacentHTML('beforeend', messageHTML);
+            messagesDiv.scrollTop = messagesDiv.scrollHeight;
+            return messageId;
         }
 
     </script>
