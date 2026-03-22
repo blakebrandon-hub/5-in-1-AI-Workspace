@@ -7,7 +7,7 @@ import zipfile
 from io import BytesIO
 import uuid
 
-from flask import Flask, render_template, request, jsonify, send_file
+from flask import Flask, render_template, request, jsonify, send_file, after_this_request
 from flask_cors import CORS
 from werkzeug.utils import secure_filename
 from openai import OpenAI
@@ -31,8 +31,7 @@ OUTPUT_DIR = os.path.join(os.path.dirname(os.path.abspath(__file__)), "outputs")
 os.makedirs(OUTPUT_DIR, exist_ok=True)
 
 app = Flask(__name__)
-CORS(app)
-
+CORS(app, resources={r"/*": {"origins": "*"}})
 client = OpenAI(api_key=os.getenv("OPENAI_API_KEY"))
 
 # Job Stores
@@ -48,6 +47,16 @@ is_model_ready = False
 # ---------------------------------------------------
 # Core AI & RAG Utilities
 # ---------------------------------------------------
+
+
+
+@app.after_request
+def add_cors_headers(response):
+    response.headers["Access-Control-Allow-Origin"] = "https://blakebrandon-hub.github.io"
+    response.headers["Access-Control-Allow-Headers"] = "Content-Type, Authorization"
+    response.headers["Access-Control-Allow-Methods"] = "GET, POST, OPTIONS"
+    return response
+
 
 def call_llm(system_prompt, user_prompt, temperature=0.3):
     response = client.chat.completions.create(
