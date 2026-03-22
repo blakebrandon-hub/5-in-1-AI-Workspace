@@ -551,7 +551,6 @@ def api_code_generate():
 
     job_id = datetime.now().strftime("%Y%m%d_%H%M%S")
     threading.Thread(target=run_code_agent, args=(goal, job_id)).start()
-    return job_id
     return jsonify({"job_id": job_id}
                   
                   )
