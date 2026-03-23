@@ -586,10 +586,10 @@ JOB_TITLES = [
 ]
 
 GOOD_KEYWORDS = [
-    "llm", "machine learning", "ai engineer",
+    "llm", "machine learning", "ai", "ml",
     "rag", "nlp", "deep learning", "python",
-    "ai platform", "ai infrastructure", "genai",
-    "ml engineer", "mlops"
+    "ai platform", "genai", "engineer",
+    "mlops", "backend"
 ]
 
 BAD_KEYWORDS = [
@@ -766,7 +766,7 @@ def get_stats():
         ORDER BY count DESC 
         LIMIT 10
     """)
-    top_companies = [(row["company"], row["count"]) for row in cursor.fetchall()}
+    top_companies = [(row["company"], row["count"]) for row in cursor.fetchall()]
     
     cursor.execute("""
         SELECT COUNT(*) as count 
@@ -854,41 +854,18 @@ def is_relevant(title: str, company: str = "") -> bool:
     return True
 
 def score_job(job: Dict) -> int:
-    """Score job relevance (0-20 scale)"""
+    """Score job relevance based on active filters only"""
     score = 0
     title = (job.get("title") or "").lower()
     company = (job.get("company") or "").lower()
     
+    # High Signal Companies: +5 points
     if any(c in company for c in HIGH_SIGNAL_COMPANIES):
         score += 5
     
-    source = job.get("source", "")
-    if source == "YC":
-        score += 4
-    elif source == "HN":
-        score += 3
-    elif source == "LinkedIn":
-        score += 2
-    elif source == "RemoteOK":
-        score += 1
-    
-    ai_keywords = sum(1 for k in GOOD_KEYWORDS if k in title)
-    score += min(ai_keywords * 2, 6)
-    
-    if "python" in title:
-        score += 2
-    if "backend" in title:
-        score += 2
-    
-    depth_keywords = ["infrastructure", "platform", "systems", "distributed"]
-    if any(k in title for k in depth_keywords):
-        score += 2
-    
-    if "full stack" in title and "ai" not in title:
-        score -= 1
-    
-    if len(title) < 15:
-        score -= 1
+    # Good Keywords: +2 points each (max 6 points = 3 keywords)
+    keyword_matches = sum(1 for k in GOOD_KEYWORDS if k in title)
+    score += min(keyword_matches * 2, 6)
     
     return max(0, score)
 
@@ -1196,92 +1173,6 @@ def run_search(job_titles: List[str], progress_callback=None) -> List[Dict]:
     logger.info("="*60)
     
     return unique
-
-# ---------------------------------------------------
-# Chatbot Data & Route
-# ---------------------------------------------------
-
-CHATBOT_DATA = {
-    "about": {
-        "name": "Blake Brandon",
-        "role": "AI Systems Engineer",
-        "focus": [
-            "LLM orchestration",
-            "RAG systems",
-            "deterministic pipelines"
-        ]
-    },
-    "projects": [
-        {
-            "name": "Multi-Agent AI Workspace",
-            "description": "Modular AI system with shared orchestration",
-            "architecture": [
-                "Shared orchestration layer",
-                "Async job system",
-                "RAG pipeline"
-            ]
-        },
-        {
-            "name": "CRM Platform",
-            "description": "Offline-first system with deterministic sync",
-            "architecture": [
-                "Conflict-aware sync",
-                "Automated pipelines"
-            ]
-        },
-        {
-            "name": "Sprawl RPG",
-            "description": "LLM-driven system with strict output constraints",
-            "architecture": [
-                "Structured outputs",
-                "State machine",
-                "Validation loop"
-            ]
-        }
-    ]
-}
-
-def get_context(question):
-    q = question.lower()
-
-    if "workspace" in q:
-        return CHATBOT_DATA["projects"][0]
-    if "crm" in q:
-        return CHATBOT_DATA["projects"][1]
-    if "rpg" in q or "sprawl" in q:
-        return CHATBOT_DATA["projects"][2]
-    if "skill" in q or "experience" in q:
-        return CHATBOT_DATA["about"]
-
-    return CHATBOT_DATA
-
-@app.route('/chat', methods=['POST'])
-def chat():
-    user_message = request.json.get("message")
-    context = get_context(user_message)
-
-    completion = client.chat.completions.create(
-        model="gpt-4o-mini",
-        messages=[
-            {
-                "role": "system",
-                "content": f"""
-You are an AI assistant representing Blake Brandon.
-
-Be concise, structured, and technical.
-Explain systems using architecture and decisions.
-
-Context:
-{context}
-"""
-            },
-            {"role": "user", "content": user_message}
-        ]
-    )
-
-    return jsonify({
-        "reply": completion.choices[0].message.content
-    })
 
 # ---------------------------------------------------
 # Routes
