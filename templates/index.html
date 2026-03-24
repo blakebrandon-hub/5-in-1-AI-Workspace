@@ -314,22 +314,31 @@
             <p>Smart job aggregator with AI-powered filtering and scoring</p>
         </div>
 
-        <!-- Active Filters & Scoring Rules -->
         <div class="card">
             <h2 style="margin-bottom: 20px;">⚙️ Active Filters & Scoring Rules</h2>
             
             <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 20px; margin-bottom: 30px;">
                 
-                <!-- Good Keywords -->
+                <div style="background: #f5f3ff; padding: 20px; border-radius: 8px; border: 2px solid #c4b5fd; grid-column: 1 / -1;">
+                    <div style="font-weight: 600; margin-bottom: 15px; display: flex; align-items: center; gap: 8px; color: #4c1d95;">
+                        <span>🎯 Target Job Titles (Required for Search)</span>
+                    </div>
+                    <div id="jobTitlesList" style="display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 15px;">
+                        </div>
+                    <div style="display: flex; gap: 8px;">
+                        <input type="text" id="newJobTitle" placeholder="Add job title (e.g., Full Stack Engineer)..." style="flex: 1; padding: 8px; border: 2px solid #c4b5fd; border-radius: 6px;" onkeyup="if(event.key==='Enter') addJobTitle()">
+                        <button onclick="addJobTitle()" class="btn-primary" style="width: auto; margin: 0; padding: 8px 16px; background: #8b5cf6;">Add Title</button>
+                    </div>
+                </div>
+
                 <div style="background: #f0fdf4; padding: 20px; border-radius: 8px; border: 2px solid #86efac;">
                     <div style="font-weight: 600; margin-bottom: 15px; display: flex; align-items: center; gap: 8px;">
                         <span>✅ Good Keywords</span>
                     </div>
                     <div id="goodKeywordsList" style="display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 15px;">
-                        <!-- Pills will be added here -->
-                    </div>
+                        </div>
                     <div style="display: flex; gap: 8px;">
-                        <input type="text" id="newGoodKeyword" placeholder="Add keyword..." style="flex: 1; padding: 8px; border: 2px solid #86efac; border-radius: 6px;">
+                        <input type="text" id="newGoodKeyword" placeholder="Add keyword..." style="flex: 1; padding: 8px; border: 2px solid #86efac; border-radius: 6px;" onkeyup="if(event.key==='Enter') addGoodKeyword()">
                         <button onclick="addGoodKeyword()" class="btn-primary" style="width: auto; margin: 0; padding: 8px 16px;">Add</button>
                     </div>
                 </div>
@@ -380,7 +389,7 @@
             <!-- Scoring System -->
             <div style="background: #f8f9fa; padding: 20px; border-radius: 8px; border: 2px solid #e2e8f0;">
                 <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
-                    <h3 style="margin: 0;">🎯 Scoring System (0-11 scale)</h3>
+                    <h3 style="margin: 0;">🎯 Scoring System (0-15 scale)</h3>
                     <button onclick="saveFilters()" style="background: #667eea; color: white; padding: 10px 24px; border: none; border-radius: 6px; font-weight: 600; cursor: pointer;">
                         💾 Save All Changes
                     </button>
@@ -394,12 +403,16 @@
                         <div style="font-size: 1.5rem; font-weight: bold; color: #10b981;">+2</div>
                         <div style="color: #64748b; font-size: 0.9rem;">Each Good Keyword match (max 6 points)</div>
                     </div>
+                    <div style="border-left: 4px solid #3b82f6; padding-left: 12px;">
+                        <div style="font-size: 1.5rem; font-weight: bold; color: #3b82f6;">+4</div>
+                        <div style="color: #64748b; font-size: 0.9rem;">Not from LinkedIn</div>
+                    </div>
                 </div>
                 <div style="margin-top: 15px; padding: 15px; background: white; border-radius: 6px; border: 1px solid #e2e8f0;">
                     <p style="margin: 0; color: #64748b; font-size: 0.9rem;">
                         <strong>How it works:</strong> Jobs are scored based on your active filters above. 
-                        Maximum score is 11 points (5 for High Signal Company + 6 for Good Keywords). 
-                        Excluded Keywords and Excluded Seniority filters remove jobs entirely.
+                        Maximum score is 15 points (5 for High Signal Company + 6 for Good Keywords + 4 for non-LinkedIn). 
+                        Excluded Keywords and Excluded Seniority filters remove jobs entirely. Not coming from LinkedIn gets another 4 points.
                     </p>
                 </div>
             </div>
@@ -903,6 +916,11 @@
             }
         }
 
+        
+        // ==========================================
+        // JOB SEARCH
+        // ==========================================
+
         // --- Job Search Functions ---
         let currentJobSearchId = null;
         let jobPollInterval = null;
@@ -910,52 +928,86 @@
         let currentNotesJobId = null;
 
         // Filter configuration
-        let goodKeywords = ["llm", "machine learning", "ai", "ml", "rag", "nlp", "deep learning", "python", "ai platform", "genai", "engineer", "mlops", "backend"];
-        let badKeywords = ["trainer", "training sales", "customer success", "advisor", "support rep", "marketing coordinator", "writer", "translation", "data entry", "annotator"];
-        let seniorKeywords = ["principal", "staff engineer", "director", "vp", "chief", "head of"];
-        let highSignalCompanies = ["openai", "anthropic", "google deepmind", "modal", "replicate", "cohere", "hugging face", "scale ai", "cursor", "perplexity"];
+        let jobTitles = [];
+        let goodKeywords = [];
+        let badKeywords = [];
+        let seniorKeywords = [];
+        let highSignalCompanies = [];
 
         // Initialize filters on page load
         function initializeFilters() {
             renderKeywordPills();
         }
+function renderKeywordPills() {
+            // Target Job Titles
+            const titleList = document.getElementById('jobTitlesList');
+            if(titleList) {
+                titleList.innerHTML = jobTitles.map(k => 
+                    `<span style="background: #c4b5fd; color: #4c1d95; padding: 6px 12px; border-radius: 20px; font-size: 13px; display: flex; align-items: center; gap: 6px; font-weight: 600;">
+                        ${k}
+                        <button onclick="removeJobTitle('${k}')" style="background: none; border: none; color: #4c1d95; cursor: pointer; font-size: 16px; padding: 0; line-height: 1;">×</button>
+                    </span>`
+                ).join('');
+            }
 
-        function renderKeywordPills() {
-            // Good Keywords
+            // Good Keywords (This was missing!)
             const goodList = document.getElementById('goodKeywordsList');
-            goodList.innerHTML = goodKeywords.map(k => 
-                `<span style="background: #86efac; color: #166534; padding: 6px 12px; border-radius: 20px; font-size: 13px; display: flex; align-items: center; gap: 6px;">
-                    ${k}
-                    <button onclick="removeGoodKeyword('${k}')" style="background: none; border: none; color: #166534; cursor: pointer; font-size: 16px; padding: 0; line-height: 1;">×</button>
-                </span>`
-            ).join('');
+            if(goodList) {
+                goodList.innerHTML = goodKeywords.map(k => 
+                    `<span style="background: #86efac; color: #166534; padding: 6px 12px; border-radius: 20px; font-size: 13px; display: flex; align-items: center; gap: 6px;">
+                        ${k}
+                        <button onclick="removeGoodKeyword('${k}')" style="background: none; border: none; color: #166534; cursor: pointer; font-size: 16px; padding: 0; line-height: 1;">×</button>
+                    </span>`
+                ).join('');
+            }
 
             // Bad Keywords
             const badList = document.getElementById('badKeywordsList');
-            badList.innerHTML = badKeywords.map(k => 
-                `<span style="background: #fca5a5; color: #991b1b; padding: 6px 12px; border-radius: 20px; font-size: 13px; display: flex; align-items: center; gap: 6px;">
-                    ${k}
-                    <button onclick="removeBadKeyword('${k}')" style="background: none; border: none; color: #991b1b; cursor: pointer; font-size: 16px; padding: 0; line-height: 1;">×</button>
-                </span>`
-            ).join('');
+            if(badList) {
+                badList.innerHTML = badKeywords.map(k => 
+                    `<span style="background: #fca5a5; color: #991b1b; padding: 6px 12px; border-radius: 20px; font-size: 13px; display: flex; align-items: center; gap: 6px;">
+                        ${k}
+                        <button onclick="removeBadKeyword('${k}')" style="background: none; border: none; color: #991b1b; cursor: pointer; font-size: 16px; padding: 0; line-height: 1;">×</button>
+                    </span>`
+                ).join('');
+            }
 
             // Senior Keywords
             const seniorList = document.getElementById('seniorKeywordsList');
-            seniorList.innerHTML = seniorKeywords.map(k => 
-                `<span style="background: #fcd34d; color: #92400e; padding: 6px 12px; border-radius: 20px; font-size: 13px; display: flex; align-items: center; gap: 6px;">
-                    ${k}
-                    <button onclick="removeSeniorKeyword('${k}')" style="background: none; border: none; color: #92400e; cursor: pointer; font-size: 16px; padding: 0; line-height: 1;">×</button>
-                </span>`
-            ).join('');
+            if(seniorList) {
+                seniorList.innerHTML = seniorKeywords.map(k => 
+                    `<span style="background: #fcd34d; color: #92400e; padding: 6px 12px; border-radius: 20px; font-size: 13px; display: flex; align-items: center; gap: 6px;">
+                        ${k}
+                        <button onclick="removeSeniorKeyword('${k}')" style="background: none; border: none; color: #92400e; cursor: pointer; font-size: 16px; padding: 0; line-height: 1;">×</button>
+                    </span>`
+                ).join('');
+            }
 
             // Companies
             const companiesList = document.getElementById('companiesList');
-            companiesList.innerHTML = highSignalCompanies.map(k => 
-                `<span style="background: #93c5fd; color: #1e40af; padding: 6px 12px; border-radius: 20px; font-size: 13px; display: flex; align-items: center; gap: 6px;">
-                    ${k}
-                    <button onclick="removeCompany('${k}')" style="background: none; border: none; color: #1e40af; cursor: pointer; font-size: 16px; padding: 0; line-height: 1;">×</button>
-                </span>`
-            ).join('');
+            if(companiesList) {
+                companiesList.innerHTML = highSignalCompanies.map(k => 
+                    `<span style="background: #93c5fd; color: #1e40af; padding: 6px 12px; border-radius: 20px; font-size: 13px; display: flex; align-items: center; gap: 6px;">
+                        ${k}
+                        <button onclick="removeCompany('${k}')" style="background: none; border: none; color: #1e40af; cursor: pointer; font-size: 16px; padding: 0; line-height: 1;">×</button>
+                    </span>`
+                ).join('');
+            }
+        }
+
+        function addJobTitle() {
+            const input = document.getElementById('newJobTitle');
+            const title = input.value.trim(); // Notice we do NOT lowercase titles!
+            if (title && !jobTitles.includes(title)) {
+                jobTitles.push(title);
+                renderKeywordPills();
+                input.value = '';
+            }
+        }
+
+        function removeJobTitle(title) {
+            jobTitles = jobTitles.filter(k => k !== title);
+            renderKeywordPills();
         }
 
         function addGoodKeyword() {
@@ -1020,6 +1072,7 @@
 
         function saveFilters() {
             // Save to localStorage
+            localStorage.setItem('jobTitles', JSON.stringify(jobTitles));
             localStorage.setItem('goodKeywords', JSON.stringify(goodKeywords));
             localStorage.setItem('badKeywords', JSON.stringify(badKeywords));
             localStorage.setItem('seniorKeywords', JSON.stringify(seniorKeywords));
@@ -1030,12 +1083,14 @@
         // Load saved filters from localStorage
         function loadSavedFilters() {
             const saved = {
+                titles: localStorage.getItem('jobTitles'),
                 good: localStorage.getItem('goodKeywords'),
                 bad: localStorage.getItem('badKeywords'),
                 senior: localStorage.getItem('seniorKeywords'),
                 companies: localStorage.getItem('highSignalCompanies')
             };
 
+            if (saved.titles) jobTitles = JSON.parse(saved.titles);
             if (saved.good) goodKeywords = JSON.parse(saved.good);
             if (saved.bad) badKeywords = JSON.parse(saved.bad);
             if (saved.senior) seniorKeywords = JSON.parse(saved.senior);
@@ -1043,12 +1098,31 @@
         }
 
         function startJobSearch() {
-            fetch('/api/jobs/search', { method: 'POST' })
-                .then(r => r.json())
-                .then(data => {
-                    document.getElementById('jobSearchProgress').style.display = 'block';
-                    jobPollInterval = setInterval(checkJobSearchProgress, 1000);
-                });
+            // BLOCK THE SEARCH IF NO TITLES EXIST
+            if (jobTitles.length === 0) {
+                alert("🚨 Please add at least one Target Job Title before running a search!");
+                return;
+            }
+
+            // Package the active UI filters
+            const payload = {
+                jobTitles: jobTitles, // <-- Send the titles!
+                goodKeywords: goodKeywords,
+                badKeywords: badKeywords,
+                seniorKeywords: seniorKeywords,
+                highSignalCompanies: highSignalCompanies
+            };
+
+            fetch('/api/jobs/search', { 
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(payload)
+            })
+            .then(r => r.json())
+            .then(data => {
+                document.getElementById('jobSearchProgress').style.display = 'block';
+                jobPollInterval = setInterval(checkJobSearchProgress, 1000);
+            });
         }
 
         function checkJobSearchProgress() {
