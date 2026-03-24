@@ -42,10 +42,10 @@ OUTPUT_DIR = os.path.join(os.path.dirname(os.path.abspath(__file__)), "outputs")
 os.makedirs(OUTPUT_DIR, exist_ok=True)
 
 app = Flask(__name__)
-app.secret_key = "your-secret-key-change-in-production"
 CORS(app)
 
-client = OpenAI(api_key=api_key.strip())
+api_key = os.getenv('OPENAI_API_KEY')
+client = OpenAI(api_key=api_key)
 
 # Job Stores
 code_jobs = {}
@@ -571,42 +571,17 @@ def clear_rag():
 
 JOB_DB = os.path.join(OUTPUT_DIR, "jobs.db")
 
-JOB_TITLES = [
-    "AI Engineer",
-    "Backend Engineer Python",
-    "Full Stack Engineer",
-]
+JOB_TITLES = []
 
-GOOD_KEYWORDS = [
-    "llm", "machine learning", "ai", "ml",
-    "rag", "nlp", "deep learning", "python",
-    "ai platform", "genai", "engineer",
-    "mlops", "backend"
-]
+GOOD_KEYWORDS = []
 
-BAD_KEYWORDS = [
-    "trainer", "training sales", "customer success",
-    "advisor", "support rep", "marketing coordinator",
-    "writer", "translation", "data entry", "annotator", "ML"
-]
+BAD_KEYWORDS = []
 
-EXCLUDE_SENIOR = [
-    "principal", "staff engineer", "director", "vp", "chief",
-    "head of", "lead engineer", "senior", "Sr"
-]
+EXCLUDE_SENIOR = []
 
-IRRELEVANT_ROLES = [
-    "qa tester", "manual test",
-    "electrical engineer", "hardware engineer",
-    "sales engineer", "solutions engineer",
-    "recruiter", "technical recruiter"
-]
+IRRELEVANT_ROLES = []
 
-HIGH_SIGNAL_COMPANIES = [
-    "openai", "anthropic", "google deepmind",
-    "modal", "replicate", "cohere", "hugging face",
-    "scale ai", "cursor", "perplexity"
-]
+HIGH_SIGNAL_COMPANIES = []
 
 # Database functions
 def get_job_connection():
@@ -822,27 +797,17 @@ def generate_queries(job_titles: List[str]) -> List[str]:
     return [q.strip("-• ").strip() for q in result.split("\n") if q.strip()]
 
 def is_relevant(title: str, company: str = "") -> bool:
-    """Determine if job is relevant"""
+    """Determine if job is relevant using ONLY dynamic UI filters"""
     t = title.lower()
-    c = company.lower()
     
-    if any(cmp in c for cmp in HIGH_SIGNAL_COMPANIES):
-        if "engineer" in t or "developer" in t:
-            return True
-    
-    if any(bad in t for bad in BAD_KEYWORDS):
+    # 1. Check Bad Keywords (using regex word boundaries, case-insensitive)
+    if any(re.search(rf'\b{re.escape(bad)}\b', t, re.IGNORECASE) for bad in BAD_KEYWORDS):
         return False
-    
-    if any(r in t for r in IRRELEVANT_ROLES):
+        
+    # 2. Check Excluded Seniority (using regex word boundaries, case-insensitive)
+    if any(re.search(rf'\b{re.escape(s)}\b', t, re.IGNORECASE) for s in EXCLUDE_SENIOR):
         return False
-    
-    very_senior = ["principal", "staff engineer", "director", "vp", "chief", "head of"]
-    if any(s in t for s in very_senior):
-        return False
-    
-    if not any(m in t for m in ["engineer", "developer"]):
-        return False
-    
+        
     return True
 
 def score_job(job: Dict) -> int:
@@ -850,6 +815,7 @@ def score_job(job: Dict) -> int:
     score = 0
     title = (job.get("title") or "").lower()
     company = (job.get("company") or "").lower()
+    source = job.get("source", "")
     
     # High Signal Companies: +5 points
     if any(c in company for c in HIGH_SIGNAL_COMPANIES):
@@ -859,6 +825,10 @@ def score_job(job: Dict) -> int:
     keyword_matches = sum(1 for k in GOOD_KEYWORDS if k in title)
     score += min(keyword_matches * 2, 6)
     
+    # Non-LinkedIn Bonus: +2 points
+    if source != "LinkedIn":
+        score += 4
+        
     return max(0, score)
 
 def search_remoteok(query: str) -> List[Dict]:
@@ -968,20 +938,10 @@ def search_linkedin_rss(job_titles: List[str]) -> List[Dict]:
                     logger.debug(f"Section {idx}: Title too short: '{title}'")
                     continue
                 
-                # Filter using the same logic
-                title_lower = title.lower()
-                
-                if any(bad in title_lower for bad in BAD_KEYWORDS):
-                    logger.debug(f"Filtered (bad keyword): {title}")
-                    continue
-                
-                # Now uses the dynamic EXCLUDE_SENIOR list!
-                if any(s in title for s in EXCLUDE_SENIOR):
-                    logger.debug(f"Filtered (seniority): {title}")
-                    continue
-                
-                if not any(k in title for k in ["engineer", "developer", "software", "ML", "ai", "python", "backend"]):
-                    logger.debug(f"Filtered (not engineering): {title}")
+                # --- ALL GHOST FILTERS REMOVED ---
+                # Pass the job through your single source of truth: the dynamic UI filters
+                if not is_relevant(title, company):
+                    logger.debug(f"Filtered by UI rules: {title}")
                     continue
                 
                 logger.info(f"LinkedIn job found: {title} at {company}")
@@ -1038,9 +998,8 @@ def search_hn_hiring() -> List[Dict]:
             if not text or len(text) < 50:
                 continue
             
-            text_lower = text.lower()
-            if not any(k in text_lower for k in ["engineer", "developer", "software", "backend", "python", "ai", "ml"]):
-                continue
+            # --- GHOST FILTER REMOVED FROM HERE ---
+            # All jobs are now passed down to be evaluated by your UI filters via is_relevant()
             
             first_line = text.split('\n')[0].strip()
             first_line = re.sub(r'<[^>]+>', '', first_line)
@@ -1275,12 +1234,13 @@ def resume_text(job_id):
 @app.route('/api/jobs/search', methods=['POST'])
 def api_job_search():
     try:
-        # 1. Pull in the global variables
-        global GOOD_KEYWORDS, BAD_KEYWORDS, EXCLUDE_SENIOR, HIGH_SIGNAL_COMPANIES
+        # 1. Pull in ALL the global variables (Fixed!)
+        global JOB_TITLES, GOOD_KEYWORDS, BAD_KEYWORDS, EXCLUDE_SENIOR, HIGH_SIGNAL_COMPANIES
         
-        # 2. Extract payload and update globals (fallback to existing if empty)
+        # 2. Extract payload and update globals
         data = request.get_json(silent=True) or {}
         if data:
+            JOB_TITLES = data.get('jobTitles', JOB_TITLES)
             GOOD_KEYWORDS = data.get('goodKeywords', GOOD_KEYWORDS)
             BAD_KEYWORDS = data.get('badKeywords', BAD_KEYWORDS)
             EXCLUDE_SENIOR = data.get('seniorKeywords', EXCLUDE_SENIOR)
@@ -1303,6 +1263,12 @@ def api_job_search():
         return jsonify({'status': 'success', 'found': len(jobs), 'inserted': count})
         
     except Exception as e:
+        # THIS WILL NOW PRINT THE EXACT ERROR TO YOUR TERMINAL!
+        import traceback
+        print("\n" + "="*50)
+        print("🚨 CRASH IN API_JOB_SEARCH 🚨")
+        traceback.print_exc()
+        print("="*50 + "\n")
         return jsonify({'status': 'error', 'message': str(e)}), 500
 
 @app.route('/api/jobs/progress')
