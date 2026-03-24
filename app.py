@@ -34,7 +34,7 @@ logger = logging.getLogger(__name__)
 # Configuration & Globals
 # ---------------------------------------------------
 
-MODEL = "gpt-5.4"
+MODEL = "gpt-5.4-mini"
 MAX_ITERATIONS_CODE = 5
 MAX_ITERATIONS_ESSAY = 3
 MAX_ITERATIONS_RESUME = 3
@@ -45,7 +45,7 @@ app = Flask(__name__)
 app.secret_key = "your-secret-key-change-in-production"
 CORS(app)
 
-client = OpenAI(api_key=os.getenv("OPENAI_API_KEY"))
+client = OpenAI(api_key=api_key.strip())
 
 # Job Stores
 code_jobs = {}
@@ -573,16 +573,8 @@ JOB_DB = os.path.join(OUTPUT_DIR, "jobs.db")
 
 JOB_TITLES = [
     "AI Engineer",
-    "Machine Learning Engineer",
-    "Applied AI Engineer",
-    "Backend Engineer AI",
-    "Backend Python Engineer",
-    "Software Engineer AI",
-    "Software Engineer Machine Learning",
-    "Full Stack Engineer AI",
-    "Product Engineer AI",
-    "Software Engineer",
-    "Backend Engineer"
+    "Backend Engineer Python",
+    "Full Stack Engineer",
 ]
 
 GOOD_KEYWORDS = [
@@ -595,12 +587,12 @@ GOOD_KEYWORDS = [
 BAD_KEYWORDS = [
     "trainer", "training sales", "customer success",
     "advisor", "support rep", "marketing coordinator",
-    "writer", "translation", "data entry", "annotator"
+    "writer", "translation", "data entry", "annotator", "ML"
 ]
 
 EXCLUDE_SENIOR = [
     "principal", "staff engineer", "director", "vp", "chief",
-    "head of", "lead engineer"
+    "head of", "lead engineer", "senior", "Sr"
 ]
 
 IRRELEVANT_ROLES = [
@@ -812,14 +804,14 @@ def export_jobs():
 # Job search functions
 def llm_call_jobs(system: str, user: str) -> str:
     """Make LLM call for job search"""
-    response = client.responses.create(
+    response = client.chat.completions.create( # Fixed method
         model=MODEL,
-        input=[
+        messages=[                             # Fixed parameter
             {"role": "system", "content": system},
             {"role": "user", "content": user}
         ]
     )
-    return response.output_text
+    return response.choices[0].message.content.strip() # Fixed return extraction
 
 def generate_queries(job_titles: List[str]) -> List[str]:
     """Generate search queries from job titles"""
@@ -983,11 +975,12 @@ def search_linkedin_rss(job_titles: List[str]) -> List[Dict]:
                     logger.debug(f"Filtered (bad keyword): {title}")
                     continue
                 
-                if any(s in title_lower for s in ["principal", "director", "vp", "chief"]):
+                # Now uses the dynamic EXCLUDE_SENIOR list!
+                if any(s in title for s in EXCLUDE_SENIOR):
                     logger.debug(f"Filtered (seniority): {title}")
                     continue
                 
-                if not any(k in title_lower for k in ["engineer", "developer", "software", "ml", "ai", "python", "backend"]):
+                if not any(k in title for k in ["engineer", "developer", "software", "ML", "ai", "python", "backend"]):
                     logger.debug(f"Filtered (not engineering): {title}")
                     continue
                 
@@ -1279,10 +1272,20 @@ def resume_text(job_id):
         return jsonify({'resume': resume_jobs[job_id].get('resume', '')})
     return jsonify({'resume': ''})
 
-# Job Search Routes
 @app.route('/api/jobs/search', methods=['POST'])
 def api_job_search():
     try:
+        # 1. Pull in the global variables
+        global GOOD_KEYWORDS, BAD_KEYWORDS, EXCLUDE_SENIOR, HIGH_SIGNAL_COMPANIES
+        
+        # 2. Extract payload and update globals (fallback to existing if empty)
+        data = request.get_json(silent=True) or {}
+        if data:
+            GOOD_KEYWORDS = data.get('goodKeywords', GOOD_KEYWORDS)
+            BAD_KEYWORDS = data.get('badKeywords', BAD_KEYWORDS)
+            EXCLUDE_SENIOR = data.get('seniorKeywords', EXCLUDE_SENIOR)
+            HIGH_SIGNAL_COMPANIES = data.get('highSignalCompanies', HIGH_SIGNAL_COMPANIES)
+
         progress_file = os.path.join(OUTPUT_DIR, 'search_progress.json')
         
         def update_progress(message):
@@ -1298,6 +1301,7 @@ def api_job_search():
         count = insert_jobs(jobs)
         
         return jsonify({'status': 'success', 'found': len(jobs), 'inserted': count})
+        
     except Exception as e:
         return jsonify({'status': 'error', 'message': str(e)}), 500
 
