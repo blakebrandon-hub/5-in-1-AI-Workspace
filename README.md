@@ -109,10 +109,10 @@ This project demonstrates production-grade AI system design through a unified pl
 - 🚫 **Excluded Seniority**: Principal, Director, VP, etc.
 - ⭐ **High Signal Companies**: +5 points (OpenAI, Anthropic, etc.)
 
-#### **Smart Scoring (0-11 scale)**
+#### **Smart Scoring (0-15 scale)**
 - High Signal Company match: **+5 points**
 - Good Keyword matches: **+2 each** (capped at 6)
-- Jobs sorted by relevance score
+- Jobs not coming from LinkedIn **+4 points**
 
 #### **Advanced Features**
 - SQLite database with 8 status types (new, interested, applied, interview, offer, rejected, ignored, seen)
